@@ -1,0 +1,1 @@
+docker exec -t mongo-container bash -c 'mongodump  --username=$MONGODB_USERNAME --password=$MONGODB_PASSWORD --host $MONGODB_HOST --authenticationDatabase admin --db $MONGODB_DATABASE --gzip --archive=/backup'

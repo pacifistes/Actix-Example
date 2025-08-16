@@ -1,0 +1,58 @@
+# start: docker-compose up -d
+# connect to glanceable-container: docker exec -it glanceable-container bash
+# stop:  docker-compose down
+
+version: '3'
+services:
+    mongo-container:
+        image: mongo
+        container_name: "mongo-container"
+        restart: always
+        ports:
+            - "27017:27017"
+        env_file:
+            - .env
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+            MONGO_INITDB_DATABASE: ${MONGODB_DATABASE}
+        volumes:
+            - ./data/backup:/backup
+            - ./data/mongo-init:/docker-entrypoint-initdb.d
+    glanceable-container:
+        depends_on:
+            - mongo-container
+        container_name: "glanceable-container"
+        build: .
+        networks:
+            - default
+        env_file:
+            - .env
+        ports:
+            - "${API_PORT}:${API_PORT}"
+        tty: true
+        volumes:
+            - ../../:/usr/src/project
+        links:
+            - mongo-container
+    mongo_express-container:
+        depends_on:
+            - mongo-container
+        container_name: "mongo_express-container"
+        image: mongo-express
+        restart: always
+        ports:
+            - "8081:8081"
+        env_file:
+            - .env
+        environment:
+            ME_CONFIG_MONGODB_SERVER: mongo-container
+            ME_CONFIG_MONGODB_PORT: 27017
+            ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+            ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGODB_USERNAME}
+            ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGODB_PASSWORD}
+            ME_CONFIG_BASICAUTH_USERNAME: ${MONGODB_USERNAME}
+            ME_CONFIG_BASICAUTH_PASSWORD: ${MONGODB_PASSWORD}
+
+volumes:
+    mongo-volume:

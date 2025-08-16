@@ -1,9 +1,10 @@
 mod authentication;
+mod services;
 
 use actix_cors::Cors;
 use actix_web::get;
 use actix_web::web::ReqData;
-use actix_web::{App, HttpResponse, HttpServer, Result, middleware, web};
+use actix_web::{middleware, web, App, HttpResponse, HttpServer, Result};
 use authentication::middleware::api_key_auth_middleware;
 
 // CORS configuration
@@ -35,10 +36,37 @@ async fn get_identity(
     Ok(HttpResponse::Ok().json(identity.into_inner()))
 }
 
+#[get("/health/mongodb")]
+async fn mongodb_health() -> Result<HttpResponse, actix_web::Error> {
+    match services::mongodb::get_database("vehicle_booking").await {
+        Ok(db) => {
+            // Try to ping the database
+            match db
+                .run_command(mongodb::bson::doc! { "ping": 1 }, None)
+                .await
+            {
+                Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
+                    "status": "healthy",
+                    "message": "MongoDB connection is working"
+                }))),
+                Err(e) => Ok(HttpResponse::ServiceUnavailable().json(serde_json::json!({
+                    "status": "unhealthy",
+                    "message": format!("MongoDB ping failed: {}", e)
+                }))),
+            }
+        }
+        Err(e) => Ok(HttpResponse::ServiceUnavailable().json(serde_json::json!({
+            "status": "unhealthy",
+            "message": format!("MongoDB client not available: {}", e)
+        }))),
+    }
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
-    let port = std::env::var("PORT").unwrap_or_else(|_| String::from("8080"));
+    let port = std::env::var("API_PORT")
+        .unwrap_or_else(|_| std::env::var("PORT").unwrap_or_else(|_| String::from("8080")));
 
     println!("Starting Vehicle Booking API on port {}", port);
     println!("Available API Keys: Admin, CarManager, MotorbikeManager, Customer1, Customer2");
@@ -54,6 +82,7 @@ async fn main() -> std::io::Result<()> {
                 "/",
                 web::get().to(|| async { HttpResponse::Ok().json("Vehicle Booking API") }),
             )
+            .service(mongodb_health)
             .service(
                 web::scope("")
                     .wrap(middleware::from_fn(api_key_auth_middleware))
