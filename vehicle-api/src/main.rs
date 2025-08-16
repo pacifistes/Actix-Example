@@ -7,7 +7,8 @@ use ::validator::Validate;
 use actix_cors::Cors;
 use actix_web::get;
 use actix_web::web::ReqData;
-use actix_web::{middleware, web, App, HttpResponse, HttpServer, Result};
+use actix_web::{App, HttpResponse, HttpServer, Result, http::StatusCode, middleware, web};
+use actix_web_lab::middleware::ErrorHandlers;
 use authentication::middleware::api_key_auth_middleware;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -27,6 +28,10 @@ use crate::error::{
 //     pub(crate) sources: HashSet<String>,
 // }
 
+use crate::error::{
+    bad_request_handler, internal_server_error_handler, not_found_handler, unauthorized_handler,
+};
+
 // CORS configuration
 fn cors() -> Cors {
     match std::env::var("ENV")
@@ -37,7 +42,7 @@ fn cors() -> Cors {
             .allow_any_method()
             .allow_any_header()
             .expose_any_header()
-            .allowed_origin("https://my_petstore.com")
+            .allowed_origin("https://car-booking.app")
             .supports_credentials(),
         _ => Cors::default()
             .allow_any_method()
@@ -85,6 +90,16 @@ async fn mongodb_health() -> Result<HttpResponse, actix_web::Error> {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
+
+    // Initialize Sentry
+    let _guard = sentry::init(sentry::ClientOptions {
+        dsn: Some("https://42044549243351b661ac8d84f3d587a4@o4509360178003968.ingest.de.sentry.io/4509855303663696".parse().unwrap()),
+        release: sentry::release_name!(),
+        send_default_pii: true,
+        max_request_body_size: sentry::MaxRequestBodySize::Medium,
+        ..Default::default()
+    });
+
     let port = std::env::var("API_PORT")
         .unwrap_or_else(|_| std::env::var("PORT").unwrap_or_else(|_| String::from("8080")));
 
@@ -97,14 +112,25 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::new(
                 "%{r}a %r %s %b %{Referer}i %{User-Agent}i %T",
             ))
-            .wrap(middleware::Compress::default())
+            .wrap(sentry_actix::Sentry::new())
+            .wrap(
+                ErrorHandlers::new()
+                    .handler(StatusCode::BAD_REQUEST, bad_request_handler)
+                    .handler(StatusCode::UNAUTHORIZED, unauthorized_handler)
+                    .handler(StatusCode::NOT_FOUND, not_found_handler)
+                    .handler(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        internal_server_error_handler,
+                    ),
+            )
+            .wrap(middleware::Compress::default()) // Error handlers are now before compression
             .route(
                 "/",
                 web::get().to(|| async { HttpResponse::Ok().json("Vehicle Booking API") }),
             )
             .service(mongodb_health)
             .service(
-                web::scope("")
+                web::scope("/protected")
                     .wrap(middleware::from_fn(api_key_auth_middleware))
                     .service(get_identity),
             )
