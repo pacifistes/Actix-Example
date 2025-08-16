@@ -1,5 +1,75 @@
 # Vehicle Booking API
 
+A Rust-based REST API for vehicle booking management built with Actix-web and MongoDB.
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Docker and Docker Compose
+- Git
+
+### Running the Project
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd Actix-Example
+   ```
+
+2. **Start the services**
+   ```bash
+   ./build.sh
+    then   
+   ./scripts/docker.sh start
+   ```
+
+3. **Start the API server**
+   ```bash
+   ./scripts/api.sh run
+   ```
+
+### 🌐 Access Points
+
+- **API Server**: http://localhost:8080
+- **MongoDB**: localhost:27017
+- **Mongo Express** (Database UI): http://localhost:8081
+  - Username: `root`
+  - Password: `example`
+
+### 🧪 Test the API
+
+```bash
+# Test the root endpoint
+curl http://localhost:8080/
+
+# Check MongoDB health
+curl http://localhost:8080/health/mongodb
+
+# Test protected endpoint (requires API key)
+curl -H "X-API-Key: Admin" http://localhost:8080/identity
+```
+
+### 🛠️ Development Commands
+
+```bash
+# Stop containers
+./scripts/docker.sh stop
+
+# Build the application
+./scripts/api.sh build
+
+# Run tests
+./scripts/api.sh test
+
+# Format code
+./scripts/api.sh fmt
+
+# Run clippy linter
+./scripts/api.sh clippy
+```
+
+---
+
 ## 🔑 Authentication
 
 Authentication is handled via **API Key**.
