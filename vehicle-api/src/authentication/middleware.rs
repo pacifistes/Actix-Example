@@ -1,9 +1,8 @@
 use actix_web::{
-    Error, HttpMessage, HttpRequest, Result,
     body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
     error::ErrorUnauthorized,
-    middleware,
+    middleware, Error, HttpMessage, HttpRequest, Result,
 };
 use actix_web_grants::authorities::AttachAuthorities;
 use std::str::FromStr;
@@ -33,6 +32,71 @@ pub async fn api_key_auth_middleware(
                         role: role.clone(),
                         user_id: format!("{:?}", role),
                     };
+
+                    // Capture identity to Sentry using breadcrumbs and user context
+                    sentry::configure_scope(|scope| {
+                        // Set user context for the entire scope
+                        scope.set_user(Some(sentry::User {
+                            id: Some(identity.user_id.clone()),
+                            username: Some(identity.user_id.clone()),
+                            email: None,
+                            ip_address: None,
+                            other: {
+                                let mut map = std::collections::BTreeMap::new();
+                                map.insert(
+                                    "role".to_string(),
+                                    sentry::protocol::Value::String(identity.role.to_string()),
+                                );
+                                map.insert(
+                                    "api_key".to_string(),
+                                    sentry::protocol::Value::String(key.clone()),
+                                );
+                                map
+                            },
+                        }));
+                        scope.set_tag("user_role", &identity.role.to_string());
+                        scope.set_tag("user_id", &identity.user_id);
+                    });
+
+                    // Add breadcrumb for authentication event
+                    sentry::add_breadcrumb(sentry::Breadcrumb {
+                        ty: "auth".to_string(),
+                        category: Some("authentication".to_string()),
+                        message: Some(format!(
+                            "User authenticated: {} with role {}",
+                            identity.user_id, identity.role
+                        )),
+                        data: {
+                            let mut map = std::collections::BTreeMap::new();
+                            map.insert(
+                                "user_id".to_string(),
+                                sentry::protocol::Value::String(identity.user_id.clone()),
+                            );
+                            map.insert(
+                                "role".to_string(),
+                                sentry::protocol::Value::String(identity.role.to_string()),
+                            );
+                            map.insert(
+                                "api_key".to_string(),
+                                sentry::protocol::Value::String(key.clone()),
+                            );
+                            map.insert(
+                                "method".to_string(),
+                                sentry::protocol::Value::String(req.method().to_string()),
+                            );
+                            map.insert(
+                                "path".to_string(),
+                                sentry::protocol::Value::String(req.path().to_string()),
+                            );
+                            map.insert(
+                                "timestamp".to_string(),
+                                sentry::protocol::Value::String(chrono::Utc::now().to_rfc3339()),
+                            );
+                            map
+                        },
+                        level: sentry::Level::Info,
+                        timestamp: std::time::SystemTime::now(),
+                    });
 
                     // Attach authorities (roles) for actix-web-grants
                     req.attach(vec![role.clone()]);
