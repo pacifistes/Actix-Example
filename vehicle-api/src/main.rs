@@ -1,11 +1,31 @@
 mod authentication;
+mod error;
 mod services;
+mod validator;
 
+use ::validator::Validate;
 use actix_cors::Cors;
 use actix_web::get;
 use actix_web::web::ReqData;
 use actix_web::{middleware, web, App, HttpResponse, HttpServer, Result};
 use authentication::middleware::api_key_auth_middleware;
+use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+
+use macros::CustomValidate;
+
+use crate::validator::CustomValidateTrait;
+
+use crate::error::{
+    bad_request_handler, internal_server_error_handler, not_found_handler, unauthorized_handler,
+};
+
+// #[derive(Serialize, Deserialize, Debug, Validate, CustomValidate)]
+// pub(crate) struct AlertTriggerSettingJson {
+//     pub(crate) name: String,
+//     #[db_validate(custom(function = "crate::validator::source::validate_many"))]
+//     pub(crate) sources: HashSet<String>,
+// }
 
 // CORS configuration
 fn cors() -> Cors {
