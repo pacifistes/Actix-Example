@@ -1,11 +1,17 @@
 mod authentication;
+mod error;
 mod services;
 
 use actix_cors::Cors;
 use actix_web::get;
 use actix_web::web::ReqData;
-use actix_web::{middleware, web, App, HttpResponse, HttpServer, Result};
+use actix_web::{http::StatusCode, middleware, web, App, HttpResponse, HttpServer, Result};
+use actix_web_lab::middleware::ErrorHandlers;
 use authentication::middleware::api_key_auth_middleware;
+
+use crate::error::{
+    bad_request_handler, internal_server_error_handler, not_found_handler, unauthorized_handler,
+};
 
 // CORS configuration
 fn cors() -> Cors {
@@ -17,7 +23,7 @@ fn cors() -> Cors {
             .allow_any_method()
             .allow_any_header()
             .expose_any_header()
-            .allowed_origin("https://my_petstore.com")
+            .allowed_origin("https://car-booking.app")
             .supports_credentials(),
         _ => Cors::default()
             .allow_any_method()
@@ -77,14 +83,24 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::new(
                 "%{r}a %r %s %b %{Referer}i %{User-Agent}i %T",
             ))
-            .wrap(middleware::Compress::default())
+            .wrap(
+                ErrorHandlers::new()
+                    .handler(StatusCode::BAD_REQUEST, bad_request_handler)
+                    .handler(StatusCode::UNAUTHORIZED, unauthorized_handler)
+                    .handler(StatusCode::NOT_FOUND, not_found_handler)
+                    .handler(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        internal_server_error_handler,
+                    ),
+            )
+            .wrap(middleware::Compress::default()) // Error handlers are now before compression
             .route(
                 "/",
                 web::get().to(|| async { HttpResponse::Ok().json("Vehicle Booking API") }),
             )
             .service(mongodb_health)
             .service(
-                web::scope("")
+                web::scope("/protected")
                     .wrap(middleware::from_fn(api_key_auth_middleware))
                     .service(get_identity),
             )
