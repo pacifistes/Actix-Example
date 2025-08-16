@@ -71,6 +71,16 @@ async fn mongodb_health() -> Result<HttpResponse, actix_web::Error> {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
+
+    // Initialize Sentry
+    let _guard = sentry::init(sentry::ClientOptions {
+        dsn: Some("https://42044549243351b661ac8d84f3d587a4@o4509360178003968.ingest.de.sentry.io/4509855303663696".parse().unwrap()),
+        release: sentry::release_name!(),
+        send_default_pii: true,
+        max_request_body_size: sentry::MaxRequestBodySize::Medium,
+        ..Default::default()
+    });
+
     let port = std::env::var("API_PORT")
         .unwrap_or_else(|_| std::env::var("PORT").unwrap_or_else(|_| String::from("8080")));
 
@@ -83,6 +93,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::new(
                 "%{r}a %r %s %b %{Referer}i %{User-Agent}i %T",
             ))
+            .wrap(sentry_actix::Sentry::new())
             .wrap(
                 ErrorHandlers::new()
                     .handler(StatusCode::BAD_REQUEST, bad_request_handler)
