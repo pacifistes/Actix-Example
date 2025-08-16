@@ -1,5 +1,3 @@
 [workspace]
-members = [
-    "vehicle-api",
-]
+members = ["vehicle-api"]
 resolver = "2"
