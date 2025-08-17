@@ -19,13 +19,6 @@ use crate::validator::CustomValidateTrait;
 
 #[derive(Clone, Debug, Serialize, Deserialize, EnumString, Display, PartialEq)]
 #[serde(rename_all = "UPPERCASE")]
-pub enum VehicleType {
-    CAR,
-    MOTORBIKE,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, EnumString, Display, PartialEq)]
-#[serde(rename_all = "UPPERCASE")]
 pub enum Gearbox {
     MANUAL,
     AUTOMATIC,
@@ -42,8 +35,16 @@ pub enum FuelType {
 #[derive(Clone, Debug, Serialize, Deserialize, EnumString, Display, PartialEq)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum Brand {
+    // Car brands
     TESLA,
     MERCEDES,
+    // Motorbike brands
+    HONDA,
+    YAMAHA,
+    KAWASAKI,
+    DUCATI,
+    BMW,
+    HARLEY_DAVIDSON,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, EnumString, Display, PartialEq)]
@@ -80,7 +81,6 @@ pub enum MotorbikeModel {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CarMetadata {
-    pub brand: Brand,
     pub model: CarModel,
     pub seats: u8,
     pub fuel_type: FuelType,
@@ -90,14 +90,13 @@ pub struct CarMetadata {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MotorbikeMetadata {
-    pub brand: Brand,
     pub model: MotorbikeModel,
     pub engine_cc: u32,
     pub has_sidecar: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(tag = "type", content = "metadata")]
+#[serde(tag = "type", content = "metadata", rename_all = "UPPERCASE")]
 pub enum VehicleMetadata {
     Car(CarMetadata),
     Motorbike(MotorbikeMetadata),
@@ -129,6 +128,7 @@ pub struct Vehicle {
 #[derive(Clone, Debug, Serialize, Deserialize, Validate, CustomValidate)]
 pub struct CreateVehicleRequest {
     pub brand: Brand,
+    #[serde(flatten)]
     #[custom_validate(custom(function = "crate::validator::vehicle::validate_metadata"))]
     pub metadata: VehicleMetadata,
     #[validate(length(
@@ -150,7 +150,7 @@ pub struct UpdateVehicleRequest {
         max = 249,
         message = "Description must be between 1 and 249 characters"
     ))]
-    pub description: Option<Option<String>>, // Option<Option<String>> to allow clearing
+    pub description: Option<String>, // Option<Option<String>> to allow clearing
     #[validate(range(min = 0.01, message = "Price must be greater than 0"))]
     pub price_by_day: Option<f64>,
 }

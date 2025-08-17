@@ -4,13 +4,14 @@ use actix_web_grants::proc_macro::protect;
 use bson::oid::ObjectId;
 
 use crate::authentication::identity::Identity;
+use crate::authentication::identity::Role;
 use crate::error::AppError;
 use crate::models::{CreateBookingRequest, UpdateBookingRequest};
 use crate::{controllers, util};
 
 /// POST /bookings - Create a new booking (Customer only)
 #[post("/bookings")]
-#[protect("Customer")]
+#[protect("Role::Customer", ty = "crate::authentication::identity::Role")]
 async fn create(
     identity: ReqData<Identity>,
     web::Json(request): web::Json<CreateBookingRequest>,
@@ -27,7 +28,6 @@ async fn create(
 /// Customer: only sees their own bookings
 /// Admin/Managers: can view all bookings
 #[get("/bookings")]
-#[protect("Admin", "CarManager", "MotorbikeManager", "Customer")]
 async fn list(identity: ReqData<Identity>) -> Result<HttpResponse, AppError> {
     let result = controllers::booking::list(&identity).await;
 
@@ -39,7 +39,6 @@ async fn list(identity: ReqData<Identity>) -> Result<HttpResponse, AppError> {
 
 /// PATCH /bookings/{booking_id} - Update a booking (Admin, CarManager, MotorbikeManager, Customer for own bookings)
 #[patch("/bookings/{booking_id}")]
-#[protect("Admin", "CarManager", "MotorbikeManager", "Customer")]
 async fn update(
     identity: ReqData<Identity>,
     path: web::Path<String>,
@@ -60,7 +59,6 @@ async fn update(
 /// Customer: only their own bookings
 /// Admin/Managers: any booking
 #[get("/bookings/{booking_id}")]
-#[protect("Admin", "CarManager", "MotorbikeManager", "Customer")]
 async fn get(
     identity: ReqData<Identity>,
     path: web::Path<String>,

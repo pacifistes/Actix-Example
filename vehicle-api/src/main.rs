@@ -74,6 +74,12 @@ async fn mongodb_health() -> Result<HttpResponse, actix_web::Error> {
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
 
+    std::env::set_var("RUST_BACKTRACE", "1");
+    if std::env::var("RUST_LOG").is_err() {
+        std::env::set_var("RUST_LOG", "actix_web=debug,info,warn");
+    }
+    env_logger::init();
+
     // Initialize Sentry
     let _guard = sentry::init(sentry::ClientOptions {
         dsn: Some("https://42044549243351b661ac8d84f3d587a4@o4509360178003968.ingest.de.sentry.io/4509855303663696".parse().unwrap()),

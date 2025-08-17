@@ -36,6 +36,7 @@ pub async fn validate_metadata(
 /// Validate brand and model compatibility
 pub async fn validate_brand_model(brand: &Brand, metadata: &VehicleMetadata) -> Result<(), String> {
     match (brand, metadata) {
+        // Car brands with car metadata
         (Brand::TESLA, VehicleMetadata::Car(car_metadata)) => {
             if !matches!(
                 car_metadata.model,
@@ -66,8 +67,41 @@ pub async fn validate_brand_model(brand: &Brand, metadata: &VehicleMetadata) -> 
             }
         }
 
-        (_, VehicleMetadata::Motorbike(_)) => {
-            // Motorbikes don't have brand-specific model constraints for now
+        // Motorbike brands with motorbike metadata (allow all combinations for now)
+        (
+            Brand::HONDA
+            | Brand::YAMAHA
+            | Brand::KAWASAKI
+            | Brand::DUCATI
+            | Brand::BMW
+            | Brand::HARLEY_DAVIDSON,
+            VehicleMetadata::Motorbike(_),
+        ) => {
+            // All motorbike brands are valid with motorbike metadata
+        }
+
+        // Invalid combinations: car brands with motorbike metadata
+        (Brand::TESLA | Brand::MERCEDES, VehicleMetadata::Motorbike(_)) => {
+            return Err(format!(
+                "{:?} is a car brand and cannot be used with motorbike metadata.",
+                brand
+            ));
+        }
+
+        // Invalid combinations: motorbike brands with car metadata
+        (
+            Brand::HONDA
+            | Brand::YAMAHA
+            | Brand::KAWASAKI
+            | Brand::DUCATI
+            | Brand::BMW
+            | Brand::HARLEY_DAVIDSON,
+            VehicleMetadata::Car(_),
+        ) => {
+            return Err(format!(
+                "{:?} is a motorbike brand and cannot be used with car metadata.",
+                brand
+            ));
         }
     }
     Ok(())

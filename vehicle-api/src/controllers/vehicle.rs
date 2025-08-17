@@ -52,23 +52,22 @@ pub async fn update(
     let mut vehicle: Vehicle = services::mongodb::get_one(filter.clone(), None)
         .await?
         .ok_or_else(|| AppError::not_found("Vehicle not found"))?;
-
     validator::vehicle::validate_update_vehicle(identity, &vehicle, &request)?;
 
     // Update the vehicle (only description and price allowed)
     if let Some(description) = request.description {
-        vehicle.description = description;
+        vehicle.description = Some(description);
     }
     if let Some(price_by_day) = request.price_by_day {
         vehicle.price_by_day = price_by_day;
     }
 
     // Save the updated vehicle using find_one_and_replace
-    let updated_vehicle = services::mongodb::find_one_and_replace(filter, vehicle, None)
+    services::mongodb::find_one_and_replace(filter, &vehicle, None)
         .await?
         .ok_or_else(|| AppError::internal_server_error(format!("Failed to update vehicle")))?;
 
-    Ok(updated_vehicle)
+    Ok(vehicle)
 }
 
 /// Get a single vehicle by ID (All users)

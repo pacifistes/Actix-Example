@@ -172,7 +172,7 @@ pub(crate) async fn find_one_and_replace<
     T: MongoStruct + Sync + Send + Serialize + DeserializeOwned,
 >(
     filter: Document,
-    obj: T,
+    obj: &T,
     options: impl Into<Option<FindOneAndReplaceOptions>>,
 ) -> AppResult<Option<T>> {
     let client = get_mongodb_client().await?;

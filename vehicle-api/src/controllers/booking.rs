@@ -68,11 +68,11 @@ pub async fn update(
     }
 
     // Save the updated booking
-    let updated_booking = services::mongodb::find_one_and_replace(filter, booking, None)
+    services::mongodb::find_one_and_replace(filter, &booking, None)
         .await?
         .ok_or_else(|| AppError::internal_server_error("Failed to update booking"))?;
 
-    Ok(updated_booking)
+    Ok(booking)
 }
 
 /// Get a single booking by ID

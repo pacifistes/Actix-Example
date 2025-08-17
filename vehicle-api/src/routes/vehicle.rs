@@ -4,6 +4,7 @@ use actix_web_grants::proc_macro::protect;
 use bson::oid::ObjectId;
 
 use crate::authentication::identity::Identity;
+use crate::authentication::identity::Role;
 use crate::error::AppError;
 use crate::models::{
     CreateVehicleRequest, UpdateVehicleRequest, VehicleFilters, VehiclePagination,
@@ -13,7 +14,7 @@ use crate::{controllers, util};
 
 /// POST /vehicles - Create a new vehicle (Admin only)
 #[post("/vehicles")]
-#[protect("Admin")]
+#[protect("Role::Admin", ty = "crate::authentication::identity::Role")]
 async fn create(
     identity: ReqData<Identity>,
     request: validator::Json<CreateVehicleRequest>,
@@ -43,7 +44,10 @@ async fn list(
 
 /// PATCH /vehicles/{vehicle_id} - Update a vehicle (Admin, CarManager, MotorbikeManager)
 #[patch("/vehicles/{vehicle_id}")]
-#[protect("Admin", "CarManager", "MotorbikeManager")]
+#[protect(
+    any("Role::Admin", "Role::CarManager", "Role::MotorbikeManager"),
+    ty = "crate::authentication::identity::Role"
+)]
 async fn update(
     identity: ReqData<Identity>,
     path: web::Path<String>,
@@ -80,7 +84,10 @@ async fn get(
 
 /// GET /vehicles/{vehicle_id}/bookings - Get all bookings for a vehicle (Admin, CarManager, MotorbikeManager)
 #[get("/vehicles/{vehicle_id}/bookings")]
-#[protect("Admin", "CarManager", "MotorbikeManager")]
+#[protect(
+    any("Role::Admin", "Role::CarManager", "Role::MotorbikeManager"),
+    ty = "crate::authentication::identity::Role"
+)]
 async fn list_bookings(
     identity: ReqData<Identity>,
     path: web::Path<String>,
