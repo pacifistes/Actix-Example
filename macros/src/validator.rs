@@ -29,7 +29,7 @@ fn process_custom(
                     let function_path = syn::parse_str::<syn::Path>(&function_path)
                         .expect("Failed to parse function path");
 
-                    let params = quote! { client, db_name, identity };
+                    let params = quote! { identity };
                     let field = if let Some(field_name) = field_name {
                         quote! { self.#field_name }
                     } else {
@@ -100,7 +100,7 @@ fn generate_validators(input: &DeriveInput) -> Vec<proc_macro2::TokenStream> {
         for field in &data.fields {
             let field_name: Option<&syn::Ident> = field.ident.as_ref();
             for attr in &field.attrs {
-                if attr.path().is_ident("db_validate") {
+                if attr.path().is_ident("custom_validate") {
                     let nested = attr
                         .parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)
                         .unwrap();
@@ -118,7 +118,7 @@ fn generate_validators(input: &DeriveInput) -> Vec<proc_macro2::TokenStream> {
 
 pub fn validate_derive(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    println!("Input: {:#?}", input); // Debug output
+    // println!("Input: {:#?}", input); // Debug output
     let name = &input.ident;
 
     let validators = generate_validators(&input);
@@ -132,6 +132,6 @@ pub fn validate_derive(input: TokenStream) -> TokenStream {
         }
     };
 
-    println!("Generated code: {}", expanded); // Debug output
+    // println!("Generated code: {}", expanded); // Debug output
     TokenStream::from(expanded)
 }
