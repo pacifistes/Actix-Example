@@ -170,7 +170,7 @@ Booking {
   "from_date": "2025-08-01",
   "to_date": "2025-08-10",
   "status": "PENDING" | "CONFIRMED" | "REJECTED" | "CANCELLED",
-  "reason": "..." // only if CANCELLED
+  "reason": "..." // only if CANCELLED or REJECTED
 }
 ```
 
