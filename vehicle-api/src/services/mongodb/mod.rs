@@ -21,6 +21,8 @@ use crate::error::{AppError, AppResult};
 pub mod query_builder;
 pub use query_builder::QueryBuilder;
 
+pub mod booking;
+
 pub const DATABASE_NAME: &str = "vehicle_booking";
 
 // Global MongoDB client instance using OnceCell for lazy initialization

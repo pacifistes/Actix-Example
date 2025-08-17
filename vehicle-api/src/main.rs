@@ -117,6 +117,7 @@ async fn main() -> std::io::Result<()> {
                     .wrap(middleware::from_fn(api_key_auth_middleware))
                     .service(get_identity)
                     .configure(routes::vehicle::configure)
+                    .configure(routes::booking::configure),
             )
     })
     .bind(format!("0.0.0.0:{}", port))?

@@ -78,8 +78,8 @@ Available API Keys:
 * `Admin`
 * `CarManager`
 * `MotorbikeManager`
-* `Customer1`
-* `Customer2`
+* `Customer1` (maps to Customer role with user_id: customer_user_1)
+* `Customer2` (maps to Customer role with user_id: customer_user_2)
 
 Each role has specific permissions as described below.
 
@@ -89,7 +89,7 @@ Each role has specific permissions as described below.
 
 * **Admin**: full access (manage vehicles and bookings).
 * **CarManager / MotorbikeManager**: manage vehicles and bookings of their category.
-* **Customer**: can only create and view their own bookings.
+* **Customer**: can only create and view their own bookings. Different API keys (`Customer1`, `Customer2`) map to the same role but different user identities.
 
 ---
 

@@ -6,8 +6,7 @@ use bson::oid::ObjectId;
 use crate::authentication::identity::Identity;
 use crate::error::AppError;
 use crate::models::{
-    CreateVehicleRequest, UpdateVehicleRequest, VehicleBookingSortOptions, VehicleFilters,
-    VehiclePagination,
+    CreateVehicleRequest, UpdateVehicleRequest, VehicleFilters, VehiclePagination,
 };
 use crate::validator;
 use crate::{controllers, util};
@@ -86,7 +85,9 @@ async fn list_bookings(
     identity: ReqData<Identity>,
     path: web::Path<String>,
 ) -> Result<HttpResponse, AppError> {
-    let vehicle_id = path.into_inner();
+    let vehicle_id_str = path.into_inner();
+    let vehicle_id = ObjectId::parse_str(&vehicle_id_str)
+        .map_err(|_| AppError::bad_request("Invalid vehicle ID format"))?;
     let result = controllers::vehicle::list_bookings(&identity, &vehicle_id).await;
 
     match result {

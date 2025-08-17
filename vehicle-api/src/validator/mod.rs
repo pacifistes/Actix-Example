@@ -1,3 +1,4 @@
+pub mod booking;
 mod json;
 pub mod vehicle;
 

@@ -244,10 +244,6 @@ impl crate::services::mongodb::MongoStruct for Vehicle {
 }
 
 impl Vehicle {
-    pub fn collection_name() -> &'static str {
-        "vehicles"
-    }
-
     pub fn new(request: CreateVehicleRequest, added_by: String) -> Result<Self, String> {
         Ok(Self {
             id: None,

@@ -8,8 +8,7 @@ pub enum Role {
     Admin,
     CarManager,
     MotorbikeManager,
-    Customer1,
-    Customer2,
+    Customer,
 }
 
 // Identity structure
@@ -40,8 +39,8 @@ mod tests {
             "\"CarManager\""
         );
         assert_eq!(
-            serde_json::to_string(&Role::Customer1).unwrap(),
-            "\"Customer1\""
+            serde_json::to_string(&Role::Customer).unwrap(),
+            "\"Customer\""
         );
     }
 
