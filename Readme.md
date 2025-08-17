@@ -156,7 +156,6 @@ Vehicle {
 #### `GET /vehicles/{id}/bookings` (Admin, CarManager, MotorbikeManager)
 
 * Retrieve all bookings for a vehicle.
-* Supports sorting by `from_date` or `order_date`.
 
 ---
 
