@@ -18,7 +18,7 @@ pub async fn get_mongodb_client() -> Result<&'static Client, mongodb::error::Err
             // Test the connection
             client
                 .database("admin")
-                .run_command(mongodb::bson::doc! { "ping": 1 }, None)
+                .run_command(mongodb::bson::doc! { "ping": 1 })
                 .await?;
 
             println!("Successfully connected to MongoDB at: {}", mongodb_uri);

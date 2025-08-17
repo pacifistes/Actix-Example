@@ -1,6 +1,7 @@
 mod authentication;
 mod error;
 mod services;
+mod util;
 mod validator;
 
 use actix_cors::Cors;
@@ -48,10 +49,7 @@ async fn mongodb_health() -> Result<HttpResponse, actix_web::Error> {
     match services::mongodb::get_database("vehicle_booking").await {
         Ok(db) => {
             // Try to ping the database
-            match db
-                .run_command(mongodb::bson::doc! { "ping": 1 }, None)
-                .await
-            {
+            match db.run_command(mongodb::bson::doc! { "ping": 1 }).await {
                 Ok(_) => Ok(HttpResponse::Ok().json(serde_json::json!({
                     "status": "healthy",
                     "message": "MongoDB connection is working"
