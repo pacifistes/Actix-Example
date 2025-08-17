@@ -1,4 +1,4 @@
-use bson::Document;
+use bson::{oid::ObjectId, Document};
 use futures::TryStreamExt;
 use mongodb::options::CountOptions;
 use mongodb::options::DeleteOptions;
@@ -17,6 +17,9 @@ use std::env;
 use std::marker::Unpin;
 
 use crate::error::{AppError, AppResult};
+
+pub mod query_builder;
+pub use query_builder::QueryBuilder;
 
 pub const DATABASE_NAME: &str = "vehicle_booking";
 
@@ -104,19 +107,15 @@ pub(crate) async fn collect_many<T: MongoStruct + Sync + Send + Unpin + Deserial
 pub(crate) async fn insert_one<T: MongoStruct + Sync + Send + Unpin + Serialize>(
     obj: &T,
     options: impl Into<Option<InsertOneOptions>>,
-) -> AppResult<String> {
+) -> AppResult<ObjectId> {
     let client = get_mongodb_client().await?;
     let coll: Collection<T> = get_collection(client).await;
     let result = coll.insert_one(obj).with_options(options).await?;
-    Ok(result
-        .inserted_id
-        .as_object_id()
-        .ok_or_else(|| {
-            AppError::internal_server_error(
-                "Err convert document to object id in service::insert".to_string(),
-            )
-        })?
-        .to_hex())
+    Ok(result.inserted_id.as_object_id().ok_or_else(|| {
+        AppError::internal_server_error(
+            "Err convert document to object id in service::insert".to_string(),
+        )
+    })?)
 }
 
 pub(crate) async fn delete_one(
