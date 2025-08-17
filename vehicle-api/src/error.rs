@@ -18,6 +18,26 @@ pub enum AppError {
     BadRequest { message: String },
 }
 
+pub type AppResult<T> = std::result::Result<T, AppError>;
+
+#[macro_export]
+macro_rules! internal_error {
+    ($target:ty : $($other:path), *) => {
+        $(
+            impl From<$other> for $target {
+                fn from(other: $other) -> Self {
+                    Self::InternalServerError { message: other.to_string() }
+                }
+            }
+        )*
+    }
+}
+
+internal_error!(
+    AppError: std::io::Error,
+    mongodb::error::Error
+);
+
 #[derive(Serialize)]
 struct ErrorResponse {
     code: u16,
