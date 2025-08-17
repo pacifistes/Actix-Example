@@ -1,5 +1,8 @@
 mod authentication;
+mod controllers;
 mod error;
+mod models;
+mod routes;
 mod services;
 mod util;
 mod validator;
@@ -112,7 +115,8 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/protected")
                     .wrap(middleware::from_fn(api_key_auth_middleware))
-                    .service(get_identity),
+                    .service(get_identity)
+                    .configure(routes::vehicle::configure)
             )
     })
     .bind(format!("0.0.0.0:{}", port))?

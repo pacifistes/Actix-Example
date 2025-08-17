@@ -10,6 +10,7 @@ actix-web-grants = "4.1.2"
 actix-web-lab = "0.24.2"
 bson = { version = "2.13.0", features = ["chrono-0_4"] }
 chrono = { version = "0.4.39", features = ["serde"] }
+derive_builder = "0.20.2"
 derive_more = "2.0.1"
 dotenv = "0.15.0"
 futures = "0.3.31"

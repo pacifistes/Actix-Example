@@ -1,4 +1,5 @@
 mod json;
+pub mod vehicle;
 
 pub use json::Json;
 
